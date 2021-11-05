@@ -38,6 +38,17 @@ def create_gif(image_list, gif_name, duration=0.35):
     return
 
 
+def mace(pt_original, pt_estimated):
+    corner_error = 0
+    for i in range(len(pt_original)):
+        single_corner_error = np.linalg.norm(pt_original[i] - pt_estimated[i])
+        corner_error += single_corner_error
+
+    mace_value = corner_error/len(pt_original)
+    return mace_value
+
+
+
 def test(args):
 
     RE = ['0000011', '0000016', '00000147', '00000155', '00000158', '00000107', '00000239', '0000030']
@@ -146,39 +157,48 @@ def test(args):
         point_dic = np.load(npy_id.replace("LM", ""), allow_pickle=True)
         data = point_dic.item()
         err_img = 0.0
-        for j in range(6):
 
-            points_LR = data['matche_pts'][j]
-            points_RL = [points_LR[1], points_LR[0]]
+        data = np.load(batch_value[7])
 
-            err_LR = geometricDistance(points_LR, H_point)  # because of the order of the Coordinate of img_A and img_B is inconsistent
-            err_RL = geometricDistance(points_RL, H_point)  # the data annotator has no fixed left or right when labelling
+        ps = data["ps"]
+        pt = data["pt"]
+        pt_reconstructed = cv2.perspectiveTransform(ps[None, :, :], H_point)[0]
+        mace_val = mace(pt, pt_reconstructed)
+        maces.append(mace_val)
 
-            # print("xDDD")
-            # pprint.pprint(err_LR)
-            # pprint.pprint(err_RL)
-            # print("xDDD")
+        # for j in range(6):
+        #
+        #     points_LR = data['matche_pts'][j]
+        #     points_RL = [points_LR[1], points_LR[0]]
+        #
+        #     err_LR = geometricDistance(points_LR, H_point)  # because of the order of the Coordinate of img_A and img_B is inconsistent
+        #     err_RL = geometricDistance(points_RL, H_point)  # the data annotator has no fixed left or right when labelling
+        #
+        #     # print("xDDD")
+        #     # pprint.pprint(err_LR)
+        #     # pprint.pprint(err_RL)
+        #     # print("xDDD")
+        #
+        #     err = min(err_LR, err_RL)
+        #     err_img += err
 
-            err = min(err_LR, err_RL)
-            err_img += err
-
-        err_avg = err_img / 6
-        maces.append(err_avg)
-        name = "0"*(8-len(str(i)))+str(i)
-        line = name + ":" + str(err_avg)+"\n"
- 
-        f.write(line)
-        print("{}:{}".format(i, err_avg))
-        if video_name in RE:
-            MSE_RE.append(err_avg)
-        elif video_name in LT:
-            MSE_LT.append(err_avg)
-        elif video_name in LL:
-            MSE_LL.append(err_avg)
-        elif video_name in SF:
-            MSE_SF.append(err_avg)
-        elif video_name in LF:
-            MSE_LF.append(err_avg)
+        # err_avg = err_img / 6
+        # maces.append(err_avg)
+        # name = "0"*(8-len(str(i)))+str(i)
+        # line = name + ":" + str(err_avg)+"\n"
+        #
+        # f.write(line)
+        # print("{}:{}".format(i, err_avg))
+        # if video_name in RE:
+        #     MSE_RE.append(err_avg)
+        # elif video_name in LT:
+        #     MSE_LT.append(err_avg)
+        # elif video_name in LL:
+        #     MSE_LL.append(err_avg)
+        # elif video_name in SF:
+        #     MSE_SF.append(err_avg)
+        # elif video_name in LF:
+        #     MSE_LF.append(err_avg)
 
         H_mat = torch.matmul(torch.matmul(M_tile_inv, H_mat), M_tile)
         pred_full, _ = trans(print_img_1, H_mat, output_size)  # pred_full = warped imgA
@@ -190,8 +210,8 @@ def test(args):
 
         input_list = [print_img_1_d, print_img_2_d]
         output_list = [pred_full, print_img_2_d]
-        create_gif(input_list, os.path.join(result_files, name+"_input_["+result_name+"].gif"))
-        create_gif(output_list, os.path.join(result_files, name + "_output_[" + result_name + "].gif"))
+        # create_gif(input_list, os.path.join(result_files, name+"_input_["+result_name+"].gif"))
+        # create_gif(output_list, os.path.join(result_files, name + "_output_[" + result_name + "].gif"))
 
     MSE_RE_avg = np.mean(MSE_RE)
     MSE_LT_avg = np.mean(MSE_LT)

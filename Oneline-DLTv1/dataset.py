@@ -2,6 +2,7 @@ from torch.utils.data import Dataset
 import  numpy as np
 import cv2, torch
 import os
+import glob
 
 
 def make_mesh(patch_w,patch_h):
@@ -89,7 +90,8 @@ class TrainDataset(Dataset):
 
 
 class TestDataset(Dataset):
-    def __init__(self, data_path, patch_w=560, patch_h=315, rho=16, WIDTH=640, HEIGHT=360):
+    # def __init__(self, data_path, patch_w=560, patch_h=315, rho=16, WIDTH=640, HEIGHT=360):
+    def __init__(self, data_path, patch_w=128, patch_h=128, rho=32, WIDTH=320, HEIGHT=240):
         self.mean_I = np.reshape(np.array([118.93, 113.97, 102.60]), (1, 1, 3))
         self.std_I = np.reshape(np.array([69.85, 68.81, 72.45]), (1, 1, 3))
 
@@ -104,7 +106,13 @@ class TestDataset(Dataset):
         self.pair_list = list(open(os.path.join(self.work_dir, 'Test_List.txt')))
         print(len(self.pair_list))
         self.img_path = os.path.join(self.work_dir, 'Test/')
-        self.npy_path = os.path.join(self.work_dir, 'Coordinate/')
+        # self.npy_path = os.path.join(self.work_dir, 'Coordinate/')
+        self.npy_path = os.path.join(self.work_dir, 'Coordinate-v2/')
+
+        self.dataset_path_my = "/mnt/4TB/zekhire/Datasets/datasets_HmgEst_zhanged/"
+        self.dataset_data_paths = glob.glob("{}/*.npz".format(self.dataset_path_my))
+        self.dataset_data_paths_pointer = 0
+
 
     def __getitem__(self, index):
 
@@ -171,6 +179,95 @@ class TestDataset(Dataset):
         four_points = np.reshape(four_points, (-1))
 
         return (org_img, input_tesnor, patch_indices, four_points,print_img_1, print_img_2, video_name, npy_id)
+
+
+    def __getitem__my(self, index):
+    # def __getitem__(self, index):
+        self.patch_h = 128
+        self.patch_w = 128
+        self.x_mesh, self.y_mesh = make_mesh(self.patch_w, self.patch_h)
+
+        path_data = self.dataset_data_paths[self.dataset_data_paths_pointer]
+        self.dataset_data_paths_pointer += 1
+        data = np.load()
+
+        img_1 = data["Is"]
+        img_2 = data["It"]
+
+        # img_pair = self.pair_list[index]
+        # pari_id = img_pair.split(' ')
+        # npy_id = pari_id[0].split('/')[1] + '_' + pari_id[1].split('/')[1][:-1] + '.npy'
+        # npy_id = self.npy_path + npy_id
+        video_name = path_data.split('/')[-1]
+        npy_id = path_data
+
+        # # load img1
+        # if pari_id[0][-1] == 'M':
+        #     img_1 = cv2.imread(self.img_path + pari_id[0][:-2])
+        # else:
+        #     img_1 = cv2.imread(self.img_path + pari_id[0])
+
+        # # load img2
+        # if pari_id[1][-2] == 'M':
+        #     img_2 = cv2.imread(self.img_path + pari_id[1][:-3])
+        # else:
+        #     img_2 = cv2.imread(self.img_path + pari_id[1][:-1])
+
+        # height, width = img_1.shape[:2]
+
+        # if height != self.HEIGHT or width != self.WIDTH:
+        #     img_1 = cv2.resize(img_1, (self.WIDTH, self.HEIGHT))
+
+        print_img_1 = img_1.copy()
+        print_img_1 = np.transpose(print_img_1, [2, 0, 1])
+
+        img_1 = (img_1 - self.mean_I) / self.std_I
+        img_1 = np.mean(img_1, axis=2, keepdims=True)
+        img_1 = np.transpose(img_1, [2, 0, 1])
+
+        # height, width = img_2.shape[:2]
+        #
+        # if height != self.HEIGHT or width != self.WIDTH:
+        #     img_2 = cv2.resize(img_2, (self.WIDTH, self.HEIGHT))
+
+        print_img_2 = img_2.copy()
+        print_img_2 = np.transpose(print_img_2, [2, 0, 1])
+        img_2 = (img_2 - self.mean_I) / self.std_I
+        img_2 = np.mean(img_2, axis=2, keepdims=True)
+        img_2 = np.transpose(img_2, [2, 0, 1])
+        org_img = np.concatenate([img_1, img_2], axis=0)
+        WIDTH = org_img.shape[2]
+        HEIGHT = org_img.shape[1]
+
+        tl, tr, br, bl = data["ps"]
+        x, y = tl
+        input_tesnor = org_img[:, y: y + self.patch_h, x: x + self.patch_w]
+        y_t_flat = np.reshape(self.y_mesh, [-1])
+        x_t_flat = np.reshape(self.x_mesh, [-1])
+        patch_indices = (y_t_flat + y) * WIDTH + (x_t_flat + x)
+
+        four_points = [tl, bl, br, tr]
+
+        # x = np.random.randint(self.rho, WIDTH - self.rho - self.patch_w)
+        # x = 40  # patch should in the middle of full img when testing
+        # y = np.random.randint(self.rho, HEIGHT - self.rho - self.patch_h)
+        # y = 23  # patch should in the middle of full img when testing
+        # input_tesnor = org_img[:, y: y + self.patch_h, x: x + self.patch_w]
+        #
+        # y_t_flat = np.reshape(self.y_mesh, [-1])
+        # x_t_flat = np.reshape(self.x_mesh, [-1])
+        # patch_indices = (y_t_flat + y) * WIDTH + (x_t_flat + x)
+        #
+        # top_left_point = (x, y)
+        # bottom_left_point = (x, y + self.patch_h)
+        # bottom_right_point = (self.patch_w + x, self.patch_h + y)
+        # top_right_point = (x + self.patch_w, y)
+        # four_points = [top_left_point, bottom_left_point, bottom_right_point, top_right_point]
+
+        four_points = np.reshape(four_points, (-1))
+
+        return (org_img, input_tesnor, patch_indices, four_points, print_img_1, print_img_2, video_name, npy_id)
+
 
     def __len__(self):
 
