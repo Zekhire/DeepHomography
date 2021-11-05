@@ -109,12 +109,12 @@ class TestDataset(Dataset):
         # self.npy_path = os.path.join(self.work_dir, 'Coordinate/')
         self.npy_path = os.path.join(self.work_dir, 'Coordinate-v2/')
 
-        self.dataset_path_my = "/mnt/4TB/zekhire/Datasets/datasets_HmgEst_zhanged/"
+        self.dataset_path_my = "/home/piotr_ostrowski1/Zekhire/Datasets/dataHmgEst/"
         self.dataset_data_paths = glob.glob("{}/*.npz".format(self.dataset_path_my))
         self.dataset_data_paths_pointer = 0
 
 
-    def __getitem__(self, index):
+    def __getitem__1(self, index):
 
         img_pair = self.pair_list[index]
         pari_id = img_pair.split(' ')
@@ -181,7 +181,7 @@ class TestDataset(Dataset):
         return (org_img, input_tesnor, patch_indices, four_points,print_img_1, print_img_2, video_name, npy_id)
 
 
-    def __getitem__my(self, index):
+    def __getitem__(self, index):
     # def __getitem__(self, index):
         self.patch_h = 128
         self.patch_w = 128

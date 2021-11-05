@@ -200,32 +200,32 @@ def test(args):
         # elif video_name in LF:
         #     MSE_LF.append(err_avg)
 
-        H_mat = torch.matmul(torch.matmul(M_tile_inv, H_mat), M_tile)
-        pred_full, _ = trans(print_img_1, H_mat, output_size)  # pred_full = warped imgA
-        pred_full = pred_full.cpu().detach().numpy()[0, ...]
-        pred_full = pred_full.astype(np.uint8)
-        pred_full = cv2.cvtColor(pred_full, cv2.COLOR_BGR2RGB)
-        print_img_1_d = cv2.cvtColor(print_img_1_d, cv2.COLOR_BGR2RGB)
-        print_img_2_d = cv2.cvtColor(print_img_2_d, cv2.COLOR_BGR2RGB)
+        # H_mat = torch.matmul(torch.matmul(M_tile_inv, H_mat), M_tile)
+        # pred_full, _ = trans(print_img_1, H_mat, output_size)  # pred_full = warped imgA
+        # pred_full = pred_full.cpu().detach().numpy()[0, ...]
+        # pred_full = pred_full.astype(np.uint8)
+        # pred_full = cv2.cvtColor(pred_full, cv2.COLOR_BGR2RGB)
+        # print_img_1_d = cv2.cvtColor(print_img_1_d, cv2.COLOR_BGR2RGB)
+        # print_img_2_d = cv2.cvtColor(print_img_2_d, cv2.COLOR_BGR2RGB)
 
-        input_list = [print_img_1_d, print_img_2_d]
-        output_list = [pred_full, print_img_2_d]
+        # input_list = [print_img_1_d, print_img_2_d]
+        # output_list = [pred_full, print_img_2_d]
         # create_gif(input_list, os.path.join(result_files, name+"_input_["+result_name+"].gif"))
         # create_gif(output_list, os.path.join(result_files, name + "_output_[" + result_name + "].gif"))
 
-    MSE_RE_avg = np.mean(MSE_RE)
-    MSE_LT_avg = np.mean(MSE_LT)
-    MSE_LL_avg = np.mean(MSE_LL)
-    MSE_SF_avg = np.mean(MSE_SF)
-    MSE_LF_avg = np.mean(MSE_LF)
-    res = {'RE':MSE_RE_avg, 'LT':MSE_LT_avg, 'LL':MSE_LL_avg, 'SF':MSE_SF_avg, 'LF':MSE_LF_avg}
-    print(res)
-    print("AVG:", np.average([res['RE'], res['LT'], res['LL'], res['SF'], res['LF']]))
-    f.write(str(res))
+    # MSE_RE_avg = np.mean(MSE_RE)
+    # MSE_LT_avg = np.mean(MSE_LT)
+    # MSE_LL_avg = np.mean(MSE_LL)
+    # MSE_SF_avg = np.mean(MSE_SF)
+    # MSE_LF_avg = np.mean(MSE_LF)
+    # res = {'RE':MSE_RE_avg, 'LT':MSE_LT_avg, 'LL':MSE_LL_avg, 'SF':MSE_SF_avg, 'LF':MSE_LF_avg}
+    # print(res)
+    # print("AVG:", np.average([res['RE'], res['LT'], res['LL'], res['SF'], res['LF']]))
+    # f.write(str(res))
     maces = np.array(maces)
     print("MACE:", np.mean(maces))
 
-    np.save("maces_default", maces)
+    np.save("maces_data", maces)
     return res
 
 
